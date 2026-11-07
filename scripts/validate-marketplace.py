@@ -28,6 +28,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 MARKETPLACE = REPO_ROOT / ".claude-plugin" / "marketplace.json"
+AGENTS_MARKETPLACE = REPO_ROOT / ".agents" / "plugins" / "marketplace.json"
 README = REPO_ROOT / "README.md"
 
 SHA_PATTERN = re.compile(r"^[0-9a-f]{40}$")
@@ -43,10 +44,15 @@ def gh(*args: str) -> str:
 
 
 def plugin_version_at(repo: str, ref: str) -> str:
-    raw = gh("api", f"/repos/{repo}/contents/.claude-plugin/plugin.json?ref={ref}",
-             "--jq", ".content")
-    decoded = base64.b64decode(raw).decode("utf-8")
-    return json.loads(decoded)["version"]
+    # Root plugin.json (Agent Plugins); older releases only have the Claude path.
+    for path in ("plugin.json", ".claude-plugin/plugin.json"):
+        try:
+            raw = gh("api", f"/repos/{repo}/contents/{path}?ref={ref}",
+                     "--jq", ".content")
+        except Exception:
+            continue
+        return json.loads(base64.b64decode(raw).decode("utf-8"))["version"]
+    raise RuntimeError(f"no plugin.json in {repo} at {ref}")
 
 
 def readme_version_for(plugin_name: str) -> str | None:
@@ -119,6 +125,15 @@ def main() -> int:
                 f"!= plugin.json '{expected_version}' at {ref}"
             )
 
+    claude_entries = {e.get("name"): e for e in data.get("plugins", [])}
+    agents_data = json.loads(AGENTS_MARKETPLACE.read_text(encoding="utf-8"))
+    for entry in agents_data.get("plugins", []):
+        name = entry.get("name")
+        claude_entry = claude_entries.get(name)
+        if claude_entry is None:
+            errors.append(f"{name}: in .agents marketplace but not the Claude one")
+        elif entry["source"].get("sha") != claude_entry["source"].get("sha"):
+            errors.append(f"{name}: .agents sha differs from the Claude entry")
     if errors:
         print("validate-marketplace: FAIL" + (" (offline)" if args.offline else ""))
         for err in errors:

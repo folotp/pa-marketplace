@@ -1,16 +1,15 @@
-# claude-marketplace
+# PA's Marketplace (`pa-marketplace`)
 
-Personal Claude marketplace. Hosts plugins (skills, commands, agents, hooks, MCP bundles) for use across Claude Code, Cowork, and any future surface that supports the Claude plugin format.
+PA's Marketplace. Hosts plugins for AI agents: Claude through `.claude-plugin/marketplace.json`, and ChatGPT through `.agents/plugins/marketplace.json`, which lists only plugins reviewed as portable. Gemini joins once it supports marketplaces.
 
 ## Install
 
 ```text
-/plugin marketplace add folotp/claude-marketplace
-/plugin install <plugin-name>@folotp-marketplace
+/plugin marketplace add folotp/pa-marketplace
+/plugin install <plugin-name>@pa-marketplace
 /reload-plugins
 ```
 
-The marketplace `name` (`folotp-marketplace`) differs from the repo name (`claude-marketplace`) because Claude Code rejects marketplace names that impersonate official Anthropic marketplaces.
 
 For a private repo, ensure `gh auth status` shows you're logged in to GitHub before running `/plugin marketplace add`.
 
@@ -58,7 +57,7 @@ Skills, commands, agents, and hooks are auto-discovered from their conventional 
 2. Create `plugins/<name>/.claude-plugin/plugin.json` with `name`, `version`, `description`, `author`. **The `version` here drives Update detection — bump it on every meaningful change.**
 3. Add an entry to `.claude-plugin/marketplace.json` under `plugins[]` with `name`, `source: "./plugins/<name>"`, `description`, `category`, `tags`. Do **not** duplicate `version` here.
 4. Use `/bump-plugin <name> <version>` to bump on each release (updates `plugin.json` and the README plugins table).
-5. Commit and push. Re-installation: `/plugin marketplace update folotp-marketplace` then `/plugin install <name>@folotp-marketplace`.
+5. Commit and push. Re-installation: `/plugin marketplace update pa-marketplace` then `/plugin install <name>@pa-marketplace`.
 
 ### Option B — External GitHub source (own repo, independent lifecycle)
 
@@ -67,7 +66,7 @@ Skills, commands, agents, and hooks are auto-discovered from their conventional 
 3. Add an entry to `.claude-plugin/marketplace.json` under `plugins[]` with `name`, `description`, `category`, `tags`, and `source` as the documented github source object: `{"source": "github", "repo": "owner/repo", "ref": "vX.Y.Z", "sha": "<40-char SHA>"}`. Do **not** add `commit` (not in the schema) or a top-level `version` (let `plugin.json` own it).
 4. Commit and push the marketplace update. The plugin repo evolves independently between releases — only push to the marketplace when a new release is cut.
 5. **No manual bumping needed** — see [auto-bump](#auto-bump-of-external-plugins) below. The `/bump-external-plugin <name>` command stays available for ad-hoc dry-run preview.
-6. Re-installation: same `/plugin marketplace update folotp-marketplace` then `/plugin install <name>@folotp-marketplace`.
+6. Re-installation: same `/plugin marketplace update pa-marketplace` then `/plugin install <name>@pa-marketplace`.
 
 ## Auto-bump of external plugins
 
@@ -86,7 +85,7 @@ To get instant updates instead of waiting up to 30 min for cron, do these two st
 
 Generate a token at <https://github.com/settings/tokens>:
 - Classic PAT: `repo` scope.
-- Fine-grained PAT (preferred, tighter): scoped to `folotp/claude-marketplace`, repository permission `Contents: write` (this is what the `repository_dispatch` endpoint requires).
+- Fine-grained PAT (preferred, tighter): scoped to `folotp/pa-marketplace`, repository permission `Contents: write` (this is what the `repository_dispatch` endpoint requires).
 
 Then in the source repo: **Settings → Secrets and variables → Actions → New repository secret**. Name it `MARKETPLACE_DISPATCH_TOKEN`, paste the PAT.
 
@@ -104,7 +103,7 @@ jobs:
   dispatch:
     runs-on: ubuntu-latest
     steps:
-      - uses: folotp/claude-marketplace/.github/actions/notify-marketplace@main
+      - uses: folotp/pa-marketplace/.github/actions/notify-marketplace@main
         with:
           token: ${{ secrets.MARKETPLACE_DISPATCH_TOKEN }}
 ```

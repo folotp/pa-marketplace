@@ -48,7 +48,7 @@ jobs:
         run: |
           git config user.name 'marketplace-bot'
           git config user.email 'noreply@github.com'
-          git add .claude-plugin/marketplace.json README.md
+          git add .claude-plugin/marketplace.json .agents/plugins/marketplace.json README.md
           git commit -m "chore(marketplace): auto-bump external plugins"
           git push
 
