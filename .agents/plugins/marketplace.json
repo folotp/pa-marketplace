@@ -1,0 +1,21 @@
+{
+  "name": "pa-marketplace",
+  "interface": {
+    "displayName": "PA's Marketplace"
+  },
+  "plugins": [
+    {
+      "name": "organon",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/folotp/organon-plugin.git",
+        "sha": "34dd915afeacbb91f173a67c160f789f817eac01"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

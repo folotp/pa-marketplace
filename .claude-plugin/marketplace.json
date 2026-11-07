@@ -1,5 +1,6 @@
 {
-  "name": "folotp-marketplace",
+  "name": "pa-marketplace",
+  "description": "PA's Marketplace: plugins for AI agents.",
   "owner": {
     "name": "Pierre-André",
     "email": "pierreandre@folot.net"

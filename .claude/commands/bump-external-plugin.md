@@ -57,4 +57,4 @@ Per the [plugin marketplace docs](https://code.claude.com/docs/en/plugin-marketp
 ## Notes
 
 - The source repo must be public — Anthropic Desktop's plugin-source fetcher uses anonymous access and rejects private repos with "Repository not found".
-- After commit + push, install side: `/plugin marketplace update folotp-marketplace` then click Update on the plugin row in Desktop. Update detection compares the user's installed `plugin.json` version against the version of the manifest at the new pinned ref.
+- After commit + push, install side: `/plugin marketplace update pa-marketplace` then click Update on the plugin row in Desktop. Update detection compares the user's installed `plugin.json` version against the version of the manifest at the new pinned ref.

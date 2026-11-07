@@ -34,4 +34,4 @@ Per the [plugin marketplace docs](https://code.claude.com/docs/en/plugin-marketp
 ## Notes
 
 - Do not modify `description`, `category`, or `tags` — this command is version-only.
-- After PA commits and pushes, the user side is `/plugin marketplace update folotp-marketplace` then click Update on the plugin row in Desktop (or `/plugin install <name>@folotp-marketplace` to force-reinstall).
+- After PA commits and pushes, the user side is `/plugin marketplace update pa-marketplace` then click Update on the plugin row in Desktop (or `/plugin install <name>@pa-marketplace` to force-reinstall).

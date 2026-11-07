@@ -20,6 +20,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 MARKETPLACE = REPO_ROOT / ".claude-plugin" / "marketplace.json"
+AGENTS_MARKETPLACE = REPO_ROOT / ".agents" / "plugins" / "marketplace.json"
 README = REPO_ROOT / "README.md"
 
 
@@ -48,14 +49,15 @@ def commit_sha(repo: str, ref: str) -> str:
 
 
 def plugin_version_at(repo: str, ref: str) -> str:
-    raw = gh(
-        "api",
-        f"/repos/{repo}/contents/.claude-plugin/plugin.json?ref={ref}",
-        "--jq",
-        ".content",
-    )
-    decoded = base64.b64decode(raw).decode("utf-8")
-    return json.loads(decoded)["version"]
+    # Root plugin.json (Agent Plugins); older releases only have the Claude path.
+    for path in ("plugin.json", ".claude-plugin/plugin.json"):
+        try:
+            raw = gh("api", f"/repos/{repo}/contents/{path}?ref={ref}",
+                     "--jq", ".content")
+        except Exception:
+            continue
+        return json.loads(base64.b64decode(raw).decode("utf-8"))["version"]
+    raise RuntimeError(f"no plugin.json in {repo} at {ref}")
 
 
 def replace_in_source_block(text: str, plugin_name: str, old_ref: str,
@@ -90,6 +92,22 @@ def update_readme_row(plugin_name: str, new_version: str) -> None:
         )
     if new_text != text:
         README.write_text(new_text, encoding="utf-8")
+
+
+def sync_agents_marketplace(claude_data: dict) -> None:
+    """Re-pin plugins already listed for ChatGPT. Listing one is a manual review."""
+    data = json.loads(AGENTS_MARKETPLACE.read_text(encoding="utf-8"))
+    shas = {
+        e["name"]: e["source"]["sha"]
+        for e in claude_data.get("plugins", [])
+        if isinstance(e.get("source"), dict) and e["source"].get("sha")
+    }
+    for entry in data.get("plugins", []):
+        if entry["name"] in shas:
+            entry["source"]["sha"] = shas[entry["name"]]
+    AGENTS_MARKETPLACE.write_text(
+        json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
 
 
 def main() -> int:
@@ -134,6 +152,7 @@ def main() -> int:
     # Only rewrite marketplace.json if a bump actually changed it.
     if bumped:
         MARKETPLACE.write_text(text, encoding="utf-8")
+        sync_agents_marketplace(json.loads(text))
 
     def fmt(rows, label):
         if not rows:
