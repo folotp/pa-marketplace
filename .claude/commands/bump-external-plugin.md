@@ -34,9 +34,9 @@ Per the [plugin marketplace docs](https://code.claude.com/docs/en/plugin-marketp
 
 5. **Resolve the version** declared on that commit's `plugin.json`:
    ```bash
-   gh api /repos/<repo>/contents/.claude-plugin/plugin.json?ref=<tagName> --jq '.content' | base64 -d | python3 -c 'import json,sys; print(json.load(sys.stdin)["version"])'
+   gh api /repos/<repo>/contents/plugin.json?ref=<tagName> --jq '.content' | base64 -d | python3 -c 'import json,sys; print(json.load(sys.stdin)["version"])'
    ```
-   This is the value the README plugins table will display. If it differs from `tagName` minus a leading `v`, surface the discrepancy and ask the user whether to proceed.
+   If the repo has no root `plugin.json`, read `.claude-plugin/plugin.json` instead. This is the value the README plugins table will display. If it differs from `tagName` minus a leading `v`, surface the discrepancy and ask the user whether to proceed.
 
 6. **Compare to current state.** Read current `source.ref` and `source.sha` in the entry. If both already match the latest tag, report "already at latest (`<tagName>`)" and stop — no diff to make.
 
@@ -50,9 +50,11 @@ Per the [plugin marketplace docs](https://code.claude.com/docs/en/plugin-marketp
 
 9. **Update README plugins table.** Find the row whose link target contains `$1` (or matches the plugin name in the first cell). Set the version cell to the version from step 5.
 
-10. **Validate JSON.** Run `python3 -m json.tool .claude-plugin/marketplace.json > /dev/null`. The PostToolUse hook will also fire on the edit.
+10. **Sync the ChatGPT list.** Run `python3 scripts/bump-external-plugins.py --sync-agents`. It re-pins any plugin listed in `.agents/plugins/marketplace.json` to the new sha.
 
-11. **Show `git diff`** and stop. Do not stage, do not commit. PA reviews and commits manually.
+11. **Validate.** Run `python3 scripts/validate-marketplace.py --offline`. The PostToolUse hook will also fire on the edit.
+
+12. **Show `git diff`** and stop. Do not stage, do not commit. PA reviews and commits manually.
 
 ## Notes
 

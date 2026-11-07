@@ -6,6 +6,10 @@ matching README plugins-table row's version cell.
 Idempotent: entries already pinned to the latest tag+sha are left alone and
 the file is not rewritten (no formatting drift).
 
+Also re-pins plugins listed in .agents/plugins/marketplace.json to the sha in
+the Claude manifest. --sync-agents does only that, with no GitHub calls, for
+manual bumps.
+
 Stdlib only. Shells out to `gh` for the GitHub API calls.
 """
 
@@ -105,13 +109,16 @@ def sync_agents_marketplace(claude_data: dict) -> None:
     for entry in data.get("plugins", []):
         if entry["name"] in shas:
             entry["source"]["sha"] = shas[entry["name"]]
-    AGENTS_MARKETPLACE.write_text(
-        json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    new_text = json.dumps(data, indent=2, ensure_ascii=False) + "\n"
+    if new_text != AGENTS_MARKETPLACE.read_text(encoding="utf-8"):
+        AGENTS_MARKETPLACE.write_text(new_text, encoding="utf-8")
 
 
 def main() -> int:
     text = MARKETPLACE.read_text(encoding="utf-8")
+    if "--sync-agents" in sys.argv[1:]:
+        sync_agents_marketplace(json.loads(text))
+        return 0
     data = json.loads(text)
     bumped, unchanged, skipped, errored = [], [], [], []
 
@@ -152,7 +159,8 @@ def main() -> int:
     # Only rewrite marketplace.json if a bump actually changed it.
     if bumped:
         MARKETPLACE.write_text(text, encoding="utf-8")
-        sync_agents_marketplace(json.loads(text))
+    # Unconditional, so an earlier manual bump that missed this list gets repaired.
+    sync_agents_marketplace(json.loads(text))
 
     def fmt(rows, label):
         if not rows:
