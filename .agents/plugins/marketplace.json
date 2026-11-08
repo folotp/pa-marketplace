@@ -9,7 +9,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/folotp/organon-plugin.git",
-        "sha": "39364a2b92834ce158fae7731a4446837182d27a"
+        "sha": "21023a00f7403860a7edc04fee66760ddb285d23"
       },
       "policy": {
         "installation": "AVAILABLE",

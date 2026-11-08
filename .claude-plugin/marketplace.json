@@ -25,8 +25,8 @@
       "source": {
         "source": "github",
         "repo": "folotp/organon-plugin",
-        "ref": "v1.5.2",
-        "sha": "39364a2b92834ce158fae7731a4446837182d27a"
+        "ref": "v1.5.3",
+        "sha": "21023a00f7403860a7edc04fee66760ddb285d23"
       },
       "description": "Organon vault conventions for Claude — 8 description-triggered skills covering MCP read and write discipline, frontmatter schema, body markdown style, session discipline, Bases views, JSON Canvas cartography, and Mermaid/Excalidraw diagramming. Absorbs kepano obsidian-skills content verbatim (drift-tracked) — no runtime cascade required.",
       "category": "knowledge-management",
