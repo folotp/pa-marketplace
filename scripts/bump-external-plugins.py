@@ -29,6 +29,7 @@ README = REPO_ROOT / "README.md"
 
 
 def gh(*args: str) -> str:
+    """Return GitHub CLI stdout; propagate API/auth failures with their diagnostics."""
     result = subprocess.run(
         ["gh", *args], capture_output=True, text=True, check=False
     )
@@ -38,6 +39,9 @@ def gh(*args: str) -> str:
 
 
 def latest_release(repo: str) -> str | None:
+    """Return the latest release tag, or None only when no release exists.
+
+    Network/auth/API errors must abort the bump instead of appearing up to date."""
     try:
         out = gh("release", "view", "--repo", repo, "--json", "tagName")
     except RuntimeError as e:
@@ -49,11 +53,15 @@ def latest_release(repo: str) -> str | None:
 
 
 def commit_sha(repo: str, ref: str) -> str:
+    """Resolve a release ref to its immutable commit SHA through GitHub."""
     return gh("api", f"/repos/{repo}/commits/{ref}", "--jq", ".sha")
 
 
 def plugin_version_at(repo: str, ref: str) -> str:
     # Root plugin.json (Agent Plugins); older releases only have the Claude path.
+    """Read the version at a remote ref, trying root then legacy Claude manifest.
+
+    The fallback preserves older release compatibility; fail if neither can be read."""
     for path in ("plugin.json", ".claude-plugin/plugin.json"):
         try:
             raw = gh("api", f"/repos/{repo}/contents/{path}?ref={ref}",
@@ -84,6 +92,9 @@ def replace_in_source_block(text: str, plugin_name: str, old_ref: str,
 
 
 def update_readme_row(plugin_name: str, new_version: str) -> None:
+    """Replace only the named plugin’s version cell, preserving adjacent prose.
+
+    Fail if its table row is absent; do not silently create an incomplete listing."""
     text = README.read_text(encoding="utf-8")
     pattern = re.compile(
         r"^(\|\s*\[`" + re.escape(plugin_name) + r"`\][^|]*\|\s*)([^|]+?)(\s*\|)",
@@ -115,6 +126,11 @@ def sync_agents_marketplace(claude_data: dict) -> None:
 
 
 def main() -> int:
+    """Update existing plugin pins locally; let the workflow own commits and PRs.
+
+    --sync-agents only mirrors already-reviewed portable listings without GitHub
+    queries. Normal mode resolves releases, updates ref/SHA and README versions, then
+    synchronizes existing portable entries. This command never pushes or merges."""
     text = MARKETPLACE.read_text(encoding="utf-8")
     if "--sync-agents" in sys.argv[1:]:
         sync_agents_marketplace(json.loads(text))

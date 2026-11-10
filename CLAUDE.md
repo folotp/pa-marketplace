@@ -1,3 +1,5 @@
+@AGENTS.md
+
 <context>
 Repo: pa-marketplace. Manifest + tooling only — no app runtime, no language toolchain.
 Plugin sources: in-repo (plugins/<name>/) or external GitHub (pinned ref+sha). Version SOT: plugin.json.
