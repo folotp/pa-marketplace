@@ -13,6 +13,7 @@ permissions:
   pull-requests: write
   actions: write
 
+## Serialize all three trigger types so a single bot branch is updated at a time.
 concurrency:
   group: auto-bump-external-plugins
   cancel-in-progress: false
@@ -56,6 +57,7 @@ jobs:
           git config user.email 'noreply@github.com'
           # Deterministic branch; serialize runs and preserve normal PR review.
           branch="chore/auto-bump-external-plugins"
+          # Preserve desired bytes while switching only this disposable runner checkout.
           mkdir -p /tmp/marketplace-bump/.claude-plugin /tmp/marketplace-bump/.agents/plugins
           cp .claude-plugin/marketplace.json /tmp/marketplace-bump/.claude-plugin/
           cp .agents/plugins/marketplace.json /tmp/marketplace-bump/.agents/plugins/
@@ -71,6 +73,7 @@ jobs:
           cp /tmp/marketplace-bump/.claude-plugin/marketplace.json .claude-plugin/
           cp /tmp/marketplace-bump/.agents/plugins/marketplace.json .agents/plugins/
           cp /tmp/marketplace-bump/README.md .
+          # Revalidate after merging main; no stale pre-merge validation authorizes push.
           python3 scripts/validate-marketplace.py
           git add .claude-plugin/marketplace.json .agents/plugins/marketplace.json README.md
           if ! git diff --cached --quiet; then

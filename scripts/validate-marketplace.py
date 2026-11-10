@@ -35,6 +35,7 @@ SHA_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 
 
 def gh(*args: str) -> str:
+    """Read GitHub CLI output; an API failure raises rather than passing validation."""
     result = subprocess.run(
         ["gh", *args], capture_output=True, text=True, check=False
     )
@@ -45,6 +46,9 @@ def gh(*args: str) -> str:
 
 def plugin_version_at(repo: str, ref: str) -> str:
     # Root plugin.json (Agent Plugins); older releases only have the Claude path.
+    """Read root/legacy manifest version at the selected remote release ref.
+
+    Failure to read either manifest blocks online validation; no inferred version."""
     for path in ("plugin.json", ".claude-plugin/plugin.json"):
         try:
             raw = gh("api", f"/repos/{repo}/contents/{path}?ref={ref}",
@@ -56,6 +60,7 @@ def plugin_version_at(repo: str, ref: str) -> str:
 
 
 def readme_version_for(plugin_name: str) -> str | None:
+    """Return the named plugin table’s version cell, or None if the row is missing."""
     text = README.read_text(encoding="utf-8")
     match = re.search(
         r"^\|\s*\[`" + re.escape(plugin_name) + r"`\][^|]*\|\s*([^|]+?)\s*\|",
@@ -66,6 +71,11 @@ def readme_version_for(plugin_name: str) -> str | None:
 
 
 def main() -> int:
+    """Validate marketplace contracts and return nonzero for collected failures.
+
+    Online mode also cross-checks pinned releases and is required by CI. --offline
+    is an explicitly weaker local feedback mode and cannot replace the online gate.
+    Validation is read-only; generated changes belong to bump-external-plugins.py."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--offline", action="store_true",

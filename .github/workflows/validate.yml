@@ -1,5 +1,6 @@
 name: Marketplace validation
 on:
+  # Bot-created PRs need this explicit exact-branch route (see protected-main.md).
   workflow_dispatch:
   pull_request:
   push:
@@ -8,6 +9,7 @@ permissions:
   contents: read
 jobs:
   validate:
+    # This display name is the required main-protection context.
     name: Marketplace validation
     runs-on: ubuntu-latest
     steps:
