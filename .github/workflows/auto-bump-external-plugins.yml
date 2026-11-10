@@ -75,8 +75,9 @@ jobs:
           git add .claude-plugin/marketplace.json .agents/plugins/marketplace.json README.md
           if ! git diff --cached --quiet; then
             git commit -m "chore(marketplace): auto-bump external plugins"
-            git push origin "$branch"
           fi
+          # Publish merge-only refreshes too, so strict main protection can pass.
+          git push origin "$branch"
           if [[ "$(gh pr list --state open --head "$branch" --json number --jq length)" == 0 ]]; then
             gh pr create --base main --head "$branch" \
               --title "chore(marketplace): auto-bump external plugins" \

@@ -38,7 +38,7 @@ class BumpWorkflowTests(unittest.TestCase):
             gh.chmod(0o755)
             env = dict(os.environ, PATH=str(bin_dir) + os.pathsep + os.environ['PATH'])
             # New branch, existing open/merged branch, and repeated unchanged run.
-            for version in ('first', 'second', 'second'):
+            for iteration, version in enumerate(('first', 'second', 'second')):
                 run('git', 'switch', 'main', cwd=repo)
                 if 'chore/auto-bump-external-plugins' in run('git', 'branch', '--list', cwd=repo):
                     run('git', 'branch', '-D', 'chore/auto-bump-external-plugins', cwd=repo)
@@ -46,6 +46,17 @@ class BumpWorkflowTests(unittest.TestCase):
                 subprocess.run(['bash', '-euo', 'pipefail', '-c', commands], cwd=repo, env=env, check=True, capture_output=True, text=True)
                 self.assertEqual(run('git', 'show', 'origin/chore/auto-bump-external-plugins:README.md', cwd=repo).strip(), version)
                 self.assertEqual(run('git', 'rev-parse', 'origin/main', cwd=repo), original)
+                # Strict protection requires merge-only refreshes to reach the
+                # remote even when the generated files match the existing PR.
+                ancestor = subprocess.run(['git', 'merge-base', '--is-ancestor', 'origin/main', 'origin/chore/auto-bump-external-plugins'], cwd=repo)
+                self.assertEqual(ancestor.returncode, 0)
+                if iteration == 1:
+                    run('git', 'switch', 'main', cwd=repo)
+                    (repo / 'unrelated.txt').write_text('main advanced\n')
+                    run('git', 'add', 'unrelated.txt', cwd=repo)
+                    run('git', 'commit', '-qm', 'unrelated main change', cwd=repo)
+                    run('git', 'push', 'origin', 'main', cwd=repo)
+                    original = run('git', 'rev-parse', 'main', cwd=repo)
 
 
 if __name__ == '__main__':
